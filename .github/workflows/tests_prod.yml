@@ -1,0 +1,24 @@
+name: tests_dev_containers
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup python
+      run: |
+        pip3 install -r requirements.txt
+    - name: docker
+      run: |
+        git submodule init
+        git submodule update
+        docker-compose -f docker-compose.prod.yml up -d --build
+        docker ps -a
+        sleep 20
+        ./load_tweets_parallel.sh
+        docker-compose exec -T postgres ./run_tests.sh
+
