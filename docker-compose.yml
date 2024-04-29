@@ -7,7 +7,7 @@ services:
     volumes:
       - ./services/web/:/usr/src/app/
     ports:
-      - 1337:5000
+      - 2425:5000
     env_file:
       - ./.env.dev
     depends_on:
