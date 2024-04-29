@@ -34,5 +34,4 @@ services:
     ports:
       - 2424:5432
 volumes:
-  postgres_data:
   pg_load_tweets:

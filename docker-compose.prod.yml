@@ -16,9 +16,9 @@ services:
     depends_on:
       - postgres
 
-  postgres:
+  pg_load_tweets:
     image: postgres:13
-    build: services/postgres
+    build: services/pg_load_tweets
     volumes:
       - ./:/tmp/db
       - postgres_data_prod:/var/lib/postgresql/data/
