@@ -22,4 +22,4 @@ jobs:
         sleep 20
         # load test data
         ./load_tweets.sh
-        docker-compose exec -T service_name ./run_tests.sh
+        docker-compose exec -T postgres ./run_tests.sh

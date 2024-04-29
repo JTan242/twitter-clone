@@ -26,7 +26,7 @@ services:
     build: services/pg_load_tweets
     volumes:
       - ./:/tmp/db
-      - $HOME/bigdata/pg_load_tweets:/var/lib/postgresql/data
+      - pg_load_tweets:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=pass
@@ -35,3 +35,4 @@ services:
       - 2424:5432
 volumes:
   postgres_data:
+  pg_load_tweets:
