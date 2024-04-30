@@ -20,5 +20,5 @@ jobs:
         docker ps -a
         sleep 20
         ./load_tweets.sh
-        docker-compose exec -T postgres ./run_tests.sh
+        docker-compose exec -T db ./run_tests.sh
 

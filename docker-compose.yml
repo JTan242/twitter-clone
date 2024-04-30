@@ -7,7 +7,7 @@ services:
     volumes:
       - ./services/web/:/usr/src/app/
     ports:
-      - 2425:5000
+        - 2425:5000
     env_file:
       - ./.env.dev
     depends_on:
@@ -20,18 +20,8 @@ services:
       - POSTGRES_USER=hello_flask
       - POSTGRES_PASSWORD=hello_flask
       - POSTGRES_DB=hello_flask_dev
-
-
-  pg_load_tweets:
-    build: services/pg_load_tweets
-    volumes:
-      - ./:/tmp/db
-      - pg_load_tweets:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
-      - PGUSER=postgres
     ports:
-      - 2424:5432
+        - 2424:5432
+
 volumes:
-  pg_load_tweets:
+  postgres_data:
