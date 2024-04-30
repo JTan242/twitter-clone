@@ -1,4 +1,10 @@
+#!/bin/sh
+
+files=$(find data/*)
+
+
+
 echo '================================================================================'
-echo 'load pg_load_tweets'
+echo 'loading tweets'
 echo '================================================================================'
-time parallel python3 load_tweets.py --db=postgresql://postgres:pass@localhost:12346 --inputs={} ::: $files
+time parallel python3 load_tweets.py --db=postgresql://postgres:pass@localhost:2424 --inputs={} ::: $files

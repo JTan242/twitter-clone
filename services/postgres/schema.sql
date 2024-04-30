@@ -1,4 +1,4 @@
-CREATE EXTENSION postgis;a
+CREATE EXTENSION postgis;
 
 SET maintenance_work_mem = '16GB';
 SET max_parallel_maintenance_workers = 80;
@@ -6,7 +6,6 @@ SET max_parallel_maintenance_workers = 80;
 \set ON_ERROR_STOP on
 
 BEGIN;
-
 CREATE TABLE urls (
     id_urls BIGSERIAL PRIMARY KEY,
     url TEXT UNIQUE
@@ -134,10 +133,9 @@ CREATE MATERIALIZED VIEW tweet_tags_cooccurrence AS (
     ORDER BY total DESC
 );
 
-
-
+COMMIT;
 CREATE INDEX ON tweets USING GIN (to_tsvector('english', text));
 CREATE INDEX ON tweets (lang);
 CREATE INDEX ON tweets (id_tweets, lang);
 CREATE INDEX ON tweets(id_tweets);
-COMMIT;
+

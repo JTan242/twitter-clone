@@ -7,14 +7,14 @@ services:
     volumes:
       - ./services/web/:/usr/src/app/
     ports:
-        - 2425:5000
+      - 2425:5000
     env_file:
       - ./.env.dev
     depends_on:
-      - db
-  db:
+        - postgres
+  postgres:
     image: postgres:13
-    build: services/db
+    build: services/postgres
     volumes:
       - ./:/tmp/db
       - postgres_data:/var/lib/postgresql/data/
@@ -23,7 +23,7 @@ services:
       - POSTGRES_PASSWORD=pass
       - PGUSER=postgres
     ports:
-        - 2424:5432
+      - 2424:5432
 
 volumes:
   postgres_data:
