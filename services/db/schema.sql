@@ -8,8 +8,8 @@ SET max_parallel_maintenance_workers = 80;
 BEGIN;
 
 /*
- * Users may be partially hydrated with only a name/screen_name 
- * if they are first encountered during a quote/reply/mention 
+ * Users may be partially hydrated with only a name/screen_name
+ * if they are first encountered during a quote/reply/mention
  * inside of a tweet someone else's tweet.
  */
 CREATE TABLE users (
@@ -57,6 +57,52 @@ CREATE TABLE tweets (
 CREATE TABLE tweet_urls (
     id_tweets BIGINT,
     url TEXT
+);
+
+
+CREATE TABLE tweet_mentions (
+    id_tweets BIGINT,
+    id_users BIGINT
+);
+
+CREATE TABLE tweet_tags (
+    id_tweets BIGINT,
+    tag TEXT
+);
+COMMENT ON TABLE tweet_tags IS 'This table links both hashtags and cashtags';
+
+
+CREATE TABLE tweet_media (
+    id_tweets BIGINT,
+    url TEXT,
+    type TEXT
+);
+
+/*
+ * Precomputes the total number of occurrences for each hashtag
+ */
+CREATE MATERIALIZED VIEW tweet_tags_total AS (
+    SELECT
+        row_number() over (order by count(*) desc) AS row,
+        tag,
+        count(*) AS total
+    FROM tweet_tags
+    GROUP BY tag
+    ORDER BY total DESC
+);
+
+/*
+ * Precomputes the number of hashtags that co-occur with each other
+ */
+CREATE MATERIALIZED VIEW tweet_tags_cooccurrence AS (
+    SELECT
+        t1.tag AS tag1,
+        t2.tag AS tag2,
+        count(*) AS total
+    FROM tweet_tags t1
+    INNER JOIN tweet_tags t2 ON t1.id_tweets = t2.id_tweets
+    GROUP BY t1.tag, t2.tag
+    ORDER BY total DESC
 );
 
 CREATE INDEX ON tweets USING GIN (to_tsvector('english', text));

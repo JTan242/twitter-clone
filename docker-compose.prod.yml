@@ -14,7 +14,7 @@ services:
     env_file:
       - ./.env.prod
     depends_on:
-      - postgres
+      - db
 
   pg_load_tweets:
     image: postgres:13
