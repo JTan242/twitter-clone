@@ -23,10 +23,10 @@ db = SQLAlchemy(app)
 
 db_config = {
     'dbname': 'twitter_clone',
-    'user': 'jetan',
-    'password': 'bigD',
-    'host': 'localhost',
-    'port': '5432'  # Default PostgreSQL port
+    'user': 'postgres',
+    'password': 'pass',
+    'host': 'postgres',
+    'port': 2424  # Default PostgreSQL port
 }
 
 database_url = "postgresql://postgres:pass@postgres:5432"

@@ -21,9 +21,10 @@ services:
     volumes:
       - ./:/tmp/db
       - postgres_data_prod:/var/lib/postgresql/data/
-    ports: ["2424:5432"]    
+    ports: 
+      - 2424:5432    
     env_file:
-      - ./.env.prod.db
+      - ./.env.prod
 
   nginx:
     build: ./services/nginx
