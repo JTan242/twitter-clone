@@ -14,10 +14,9 @@ services:
     env_file:
       - ./.env.prod
     depends_on:
-      - db
+      - postgres
 
   postgres:
-    image: postgres:13
     build: services/postgres
     volumes:
       - ./:/tmp/db

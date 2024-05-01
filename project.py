@@ -1,47 +1,18 @@
-import os
-
-from flask import (
-    Flask,
-    jsonify,
-    send_from_directory,
-    request,
-    render_template,
-    make_response,
-    redirect,
-    url_for
-)
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, make_response, redirect, url_for
 import psycopg2
 from datetime import datetime
 import argparse
 
-
 app = Flask(__name__)
-app.config.from_object("project.config.Config")
-db = SQLAlchemy(app)
 
+# PostgreSQL database connection configuration
 db_config = {
-    'dbname': 'twitter_clone',
-    'user': 'jetan',
-    'password': 'bigD',
+    'dbname': 'your_database_name',
+    'user': 'your_username',
+    'password': 'your_password',
     'host': 'localhost',
     'port': '5432'  # Default PostgreSQL port
 }
-
-database_url = "postgresql://postgres:pass@postgres:5432"
-
-
-class User(db.Model):
-    __tablename__ = "users"
-
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(128), unique=True, nullable=False)
-    active = db.Column(db.Boolean(), default=True, nullable=False)
-
-    def __init__(self, email):
-        self.email = email
-
 
 # Function to check if credentials are good (You need to define this function)
 def are_credentials_good(username, password, db_connection):
@@ -57,6 +28,8 @@ def are_credentials_good(username, password, db_connection):
     except psycopg2.Error as e:
         print("Error checking credentials:", e)
         return False
+
+
 
 
 @app.route('/')
@@ -80,13 +53,12 @@ def root():
             })
     cur.close()
     conn.close()
-
+    
     # Check if logged in correctly
     username = request.cookies.get('username')
     password = request.cookies.get('password')
     good_credentials = are_credentials_good(username, password)
     return render_template('root.html', messages=messages, good_credentials=good_credentials, logged_in=False)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -110,14 +82,12 @@ def login():
             return render_template('login.html', login_unsuccessful=True)
     return render_template('login.html', login_default=True)
 
-
 @app.route('/logout')
 def logout():
     response = make_response(render_template('logout.html'))
     response.set_cookie('username', '', expires=0)
     response.set_cookie('password', '', expires=0)
     return response
-
 
 @app.route('/create_account', methods=['GET', 'POST'])
 def create_account():
@@ -143,7 +113,6 @@ def create_account():
             conn.close()
     return render_template('create_user.html')
 
-
 @app.route('/create_message', methods=['POST'])
 def create_message():
     username = request.cookies.get('username')
@@ -164,14 +133,13 @@ def create_message():
             ''', (user_id, request.form.get('newmessage'), dt_string))
             conn.commit()
             return make_response(render_template('create_message.html', created=True, username=username, password=password))
-        except Exception as e:
-            print("An error occurred:", e)
+        except:
             conn.rollback()
+            print("An error occurred while creating the message.")
         finally:
             cur.close()
             conn.close()
     return make_response(render_template('create_message.html', created=False, username=username, password=password))
-
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
@@ -181,47 +149,22 @@ def search():
         cur = conn.cursor()
         try:
             cur.execute('''
-                SELECT users.username, messages.message, messages.created_at, messages.id
-                FROM messages
+                SELECT users.username, messages.message, messages.created_at, messages.id 
+                FROM messages 
                 JOIN users ON messages.sender_id = users.id
                 WHERE messages.message ILIKE %s;
             ''', ('%' + search_query + '%',))
             rows = cur.fetchall()
             messages = [{'username': row[0], 'text': row[1], 'created_at': row[2], 'id': row[3]} for row in rows]
             messages.reverse()
-            return render_template('search.html', messages=messages, username=request.cookies.get('username'), password=request.cookies.get('password'))
+            return render_template('search_message.html', messages=messages, username=request.cookies.get('username'), password=request.cookies.get('password'))
         except Exception as e:
             print("An error occurred while searching:", e)
         finally:
             cur.close()
             conn.close()
-    return render_template('search.html', default=True, username=request.cookies.get('username'), password=request.cookies.get('password'))
-
+    return render_template('search_message.html', default=True, username=request.cookies.get('username'), password=request.cookies.get('password'))
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0")
 
-
-@app.route("/static/<path:filename>")
-def staticfiles(filename):
-    return send_from_directory(app.config["STATIC_FOLDER"], filename)
-
-
-@app.route("/media/<path:filename>")
-def mediafiles(filename):
-    return send_from_directory(app.config["MEDIA_FOLDER"], filename)
-
-
-@app.route("/upload", methods=["GET", "POST"])
-def upload_file():
-    if request.method == "POST":
-        file = request.files["file"]
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config["MEDIA_FOLDER"], filename))
-    return """
-    <!doctype html>
-    <title>upload new File</title>
-    <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file><input type=submit value=Upload>
-    </form>
-    """

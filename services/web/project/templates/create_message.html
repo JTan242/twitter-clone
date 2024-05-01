@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% if created %}
+<p>You posted a post! <a href="/home">View it here.</a></p>
+{% endif %}
+
+<div class = table>
+    <form action=/create_message method=POST>
+        <table>
+            <tr><td><input class="textfield" type=text name=newmessage><input type=submit value='post'></td></tr>
+        </table>
+    </form>
+    </div>
+
+{% endblock %} 

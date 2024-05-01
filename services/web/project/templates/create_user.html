@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<span class=background>
+<h2>Create Account</h2>
+
+<script>
+    function myFunctionpass() {
+      var x = document.getElementById("myInput");
+      if (x.type === "password1") {
+        x.type = "text";
+      } else {
+        x.type = "password1";
+      }
+    }
+    </script>
+
+<script>
+  function myFunctionpass2() {
+    var x = document.getElementById("myInput2");
+    if (x.type === "password2") {
+      x.type = "text";
+    } else {
+      x.type = "password2";
+    }
+  }
+  </script>
+
+{% if successful %}
+<span class=success>
+<h1>Sign up successful! <a href="/login">Log in here.</a></h1>
+</span>
+{% endif %}
+
+{% if wrongPass %}
+<span class=error>
+ERROR: Passwords did not match. Please try again.
+</span>
+{% endif %}
+
+{% if taken %}
+<span class=error>
+ERROR: Username '{{username}}' is already taken. Please choose a different username.
+</span>
+{% endif %}
+
+
+<form action=/create_user method=POST>
+<table class=center>
+    <tr>
+        <td><input type=text name=username placeholder="Username"></td>
+    </tr>
+    <tr>
+      <td><input type=number name=Age placeholder="Age" min="0" max="99"></td>
+  </tr>
+    <tr>
+        <td><input type=password name=password1 placeholder="Password" id="myInput"></td>
+        <td><input type="checkbox" onclick="myFunctionpass()">Show Password</td>
+    </tr>
+    <tr>
+        <td><input type=password name=password2 placeholder="Confirm Password" id="myInput2"></td>
+        <td><input type="checkbox" onclick="myFunctionpass2()">Show Password</td>
+    </tr>
+    <tr>
+        <td><input type=submit value='Create'></td>
+    </tr>
+</table>
+</form>
+
+
+{% endblock %}
