@@ -1,51 +1,29 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if login_default %}
-<h2>Login</h2>
-{% endif %}
-{% if login_successful %}
-<h1 class=entrance>We've been waiting for you, {{username}}. <br> Don't ever leave us. <br> <a href="/create_message">Post a post here.</a>
-<br> <a href="/home">See other posts here.</a>
-</h1>
-{% endif %}
+<h2>Login Webpage</h2>
 
-{% if login_unsuccessful %}
-<h2>Login</h2>
-<p class=error>
+{% if bad_credentials %}
+<p class='color:red;'>
     ERROR: Username or password incorrect.
 </p>
 {% endif %}
 
-{% if login_default or login_unsuccessful%}
 <form action='/login' method="POST">
-    
-    <script>
-    function myFunctionpass() {
-      var x = document.getElementById("myInput");
-      if (x.type === "password") {
-        x.type = "text";
-      } else {
-        x.type = "password";
-      }
-    }
-    </script>
-
-    <table class=center>
+    <table>
         <tr>
-            <td><input type=text name=username placeholder="Username"></td>
+            <td>username</td>
+            <td><input type=text name=username></td>
         </tr>
         <tr>
-            <td><input type=password name=password placeholder="Password" id="myInput"></td>
-            <td><input type="checkbox" onclick="myFunctionpass()">Show Password</td>
+            <td>password</td>
+            <td><input type=text name=password></td>
         </tr>
         <tr>
-            <td><input type=submit value='Log In'></td>
+            <td></td>
+            <td><input type=submit value='log in'></td>
         </tr>
     </table>
-
-<p>Don't have an account? <a href="/create_user">Create one here.</a> </p>
-
 </form>
-{% endif %}
+<p>New information.</p>
 {% endblock %}

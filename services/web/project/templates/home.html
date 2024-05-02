@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Home</h2>
+
+<h3>Recent Tweets</h3>
+<div class="tweet-list">
+    {% for tweet in tweet_list %}
+    <div class="tweet">
+        <div class="user-info">
+            <span class="user-name">{{ tweet.user_name }}</span>
+            <span class="screen-name">@{{ tweet.screen_name }}</span>
+        </div>
+        <div class="tweet-content">
+            <p class="tweet-text">{{ tweet.text }}</p>
+            <p class="created-at">Created at: {{ tweet.created_at }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

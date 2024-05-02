@@ -13,12 +13,12 @@ from flask import (
     flash
 )
 from flask_sqlalchemy import SQLAlchemy
-import sqlalchemy
 from sqlalchemy import text, create_engine
+import sqlalchemy
 import psycopg2
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import bleach
 import datetime
 
 
@@ -27,14 +27,26 @@ app.config.from_object("project.config.Config")
 db = SQLAlchemy(app)
 
 
+class User(db.Model):
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    active = db.Column(db.Boolean(), default=True, nullable=False)
+
+    def __init__(self, email):
+        self.email = email
+
+
 db_url = "postgresql://postgres:pass@postgres:5432"
 engine = sqlalchemy.create_engine(db_url, connect_args={'application_name': '__init__.py root()',})
 connection = engine.connect()
 
 
+
 def are_credentials_good(username, password):
-    sql = sqlalchemy.sql.text('''
-        SELECT username FROM users
+     sql = sqlalchemy.sql.text('''
+        SELECT id FROM users
         WHERE username = :username
         AND password = :password
         ;
@@ -43,7 +55,7 @@ def are_credentials_good(username, password):
     cred = connection.execute(sql, {
         'username': username,
         'password': password
-    })
+        })
 
     if cred.fetchone() is None:
         return False
@@ -54,7 +66,7 @@ def are_credentials_good(username, password):
 @app.route("/")
 def root():
     get_tweets = connection.execute(text(
-        "SELECT users.name, users.username, tweets.text, tweets.created_at "
+        "SELECT users.name, users.screen_name, tweets.text, tweets.created_at "
         "FROM tweets "
         "JOIN users on users.id_users = tweets.id_users "
         "ORDER BY tweets.created_at DESC "
@@ -65,7 +77,7 @@ def root():
     for row in get_tweets.fetchall():
         tweet_list.append({
             'user_name': row[0],
-            'username': row[1],
+            'screen_name': row[1],
             'text': row[2],
             'created_at': row[3]
         })
@@ -105,29 +117,42 @@ def logout():
     session.pop('username', None)  # Remove the username from the session
     return redirect(url_for('login'))
 
+from flask import make_response
 
 @app.route('/create_account', methods=['GET', 'POST'])
-def create_account():
+def create_user():
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+
+    logged_in = are_credentials_good(username, password)
+
+    if logged_in:
+        return redirect('/')
+
     if request.method == 'POST':
         new_username = request.form.get('new_username')
         new_password = request.form.get('new_password')
         new_password2 = request.form.get('new_password2')
 
-        if not all([new_username, new_password, new_password2]):
+        if new_username is None:
+            return render_template('create_account.html')
+        elif not all([new_username, new_password, new_password2]):
             return render_template('create_account.html', one_blank=True)
         elif new_password != new_password2:
             return render_template('create_account.html', not_matching=True)
 
-        sql = sqlalchemy.sql.text('''
-            INSERT INTO users (username, password)
-            VALUES (:username, :password)
-        ''')
-
         try:
-            connection.execute(sql, {
+            # Insert new user into the database
+            sql = sqlalchemy.sql.text('''
+                INSERT INTO users (username, password)
+                VALUES (:username, :password)
+            ''')
+
+            res = connection.execute(sql, {
                 'username': new_username,
                 'password': new_password
             })
+
             # Set cookies for the new user
             response = make_response(redirect('/'))
             response.set_cookie('username', new_username)
@@ -135,6 +160,7 @@ def create_account():
             return response
         except sqlalchemy.exc.IntegrityError:
             return render_template('create_account.html', already_exists=True)
+
     return render_template('create_account.html')
 
 
@@ -175,6 +201,3 @@ def upload_file():
       <p><input type=file name=file><input type=submit value=Upload>
     </form>
     """
-
-if __name__ == "__main__":
-    app.run(debug=True)

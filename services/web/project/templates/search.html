@@ -3,27 +3,25 @@
 {% block content %}
 
 {% if default %}
-<div class = table>
-<form action=/search method=POST>
-    <table>
-        <tr><td><input class="textfield" type=text name=search> <input type=submit value='search'></td></tr>
-    </table>
-</form>
+<div class="table">
+    <form action="/search" method="POST">
+        <table>
+            <tr><td><input class="textfield" type="text" name="search"> <input type="submit" value="search"></td></tr>
+        </table>
+    </form>
 </div>
 {% else %}
 <h2>Results:</h2>
 {% for message in messages %}
-    <div class=display-messages>
+    <div class="display-messages">
         <img src="{{message.profpic}}" width="15" height="15">
         <b>@{{message.username}}</b><br>
-            {{message.message}} <br>
-        <span class=posted>{{message.created_at}}</span>
-        {%if username == message.username %}
-        <span class=msg> 
-        <a href= "/edit_message/<id>"><u>edit</u></a>
-          
-        <a href= "/delete_message/<id>"><u>delete</u></a>
-        </span> 
+        {{message.message}} <br>
+        <span class="posted">{{message.created_at}}</span>
+        {% if username == message.username %}
+        <span class="msg">
+            <!-- Removed edit and delete links -->
+        </span>
         {% endif %}
         <br>
     </div>
@@ -31,3 +29,4 @@
 {% endif %}
 
 {% endblock %}
+
