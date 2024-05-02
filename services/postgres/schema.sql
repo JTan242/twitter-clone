@@ -17,7 +17,7 @@ CREATE TABLE urls (
  * inside of a tweet someone else's tweet.
  */
 CREATE TABLE users (
-    id_users BIGINT PRIMARY KEY,
+    id_users SERIAL PRIMARY KEY,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
     id_urls BIGINT REFERENCES urls(id_urls),
@@ -28,6 +28,7 @@ CREATE TABLE users (
     protected BOOLEAN,
     verified BOOLEAN,
     screen_name TEXT,
+    password TEXT,
     name TEXT,
     location TEXT,
     description TEXT,
@@ -40,7 +41,7 @@ CREATE TABLE users (
  */
 CREATE TABLE tweets (
     id_tweets BIGINT PRIMARY KEY,
-    id_users BIGINT,
+    id_users SERIAL,
     created_at TIMESTAMPTZ,
     in_reply_to_status_id BIGINT,
     in_reply_to_user_id BIGINT,
