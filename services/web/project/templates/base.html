@@ -10,8 +10,8 @@
 <body>
     <h1><a href='/'>Jimmy's Twitter Clone</a></h1>
     <ul>
+        <li><a href='/search'>Search</a></li> <!-- Corrected here -->
         {% if logged_in %}
-        <li><a href='/search'>Search</a></li>
         <li><a href='/create_message'>Create Tweet</a></li>
         <li><a href='/logout'>Logout</a></li>
         {% else %}

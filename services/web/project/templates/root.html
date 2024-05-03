@@ -8,8 +8,7 @@
     {% for tweet in tweet_list %}
     <div class="tweet">
         <div class="user-info">
-            <span class="user-name">{{ tweet.user_name }}</span>
-            <span class="screen-name">@{{ tweet.screen_name }}</span>
+            <span class="user-name">{{ tweet.username }}</span>
         </div>
         <div class="tweet-content">
             <p class="tweet-text">{{ tweet.text }}</p>

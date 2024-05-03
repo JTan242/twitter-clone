@@ -1,32 +1,36 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-{% if default %}
-<div class="table">
-    <form action="/search" method="POST">
-        <table>
-            <tr><td><input class="textfield" type="text" name="search"> <input type="submit" value="search"></td></tr>
-        </table>
+    <h2>Search</h2>
+    <form action="/search" method="GET">
+        <input type="text" name="query">
+        <input type="submit" value="Search" class="submit">
     </form>
-</div>
-{% else %}
-<h2>Results:</h2>
-{% for message in messages %}
-    <div class="display-messages">
-        <img src="{{message.profpic}}" width="15" height="15">
-        <b>@{{message.username}}</b><br>
-        {{message.message}} <br>
-        <span class="posted">{{message.created_at}}</span>
-        {% if username == message.username %}
-        <span class="msg">
-            <!-- Removed edit and delete links -->
-        </span>
-        {% endif %}
-        <br>
-    </div>
-{% endfor %}
-{% endif %}
 
+    {% for message in messages %}
+        <div class="container">
+            <div class="tweet">
+                <div class="user-info">
+                    <span class="user-name">{{ message['username'] }}</span>
+                </div>
+                <div class="tweet-content">
+                    <p class="tweet-text">{{ message['text'] }}</p>
+                    <p class="created-at">Created at: {{ message['created_at'] }}</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <div>
+        {% if page_num > 1 %}
+            <a href="?page={{ page_num - 1 }}" class="submit">Previous</a>
+        {% endif %}
+        
+        Page {{ page_num }}
+        
+        {% if messages|length == 20 %}
+            <a href="?page={{ page_num + 1 }}" class="submit">Next</a>
+        {% endif %}
+    </div>
 {% endblock %}
 
