@@ -18,7 +18,6 @@ from sqlalchemy import text, create_engine
 import psycopg2
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-
 import datetime
 
 
@@ -51,59 +50,87 @@ def are_credentials_good(username, password):
         return True
 
 
-@app.route("/")
-def root():
-    get_tweets = connection.execute(text(
+def get_tweets(x):
+    tweet_list=[]
+    query_text = sqlalchemy.sql.text(
         "SELECT users.name, users.username, tweets.text, tweets.created_at "
         "FROM tweets "
         "JOIN users on users.id_users = tweets.id_users "
         "ORDER BY tweets.created_at DESC "
-        "LIMIT 20;"
-    ))
-
-    tweet_list = [] 
-    for row in get_tweets.fetchall():
+        "LIMIT 20 OFFSET :offset"
+    )
+    page = connection.execute(query_text, {'offset': (x - 1) * 20})
+    for row in page.fetchall():
         tweet_list.append({
             'user_name': row[0],
             'username': row[1],
             'text': row[2],
             'created_at': row[3]
         })
-    return render_template('home.html', tweet_list=tweet_list)
+    return tweet_list
+
+
+@app.route("/")
+def root():
+    username=request.cookies.get('username')
+    password=request.cookies.get('password')
+    good_credentials=are_credentials_good(username, password)
+    if good_credentials:
+        logged_in=True
+    else:
+        logged_in=False
+
+    page_num = int(request.args.get('page', 1))
+    tweet_list = get_tweets(page_num)
+
+    return render_template('root.html', logged_in=logged_in, page_num=page_num, username=username,tweet_list=tweet_list)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    username = request.cookies.get('username')
-    password = request.cookies.get('password')
 
-    logged_in = are_credentials_good(username, password)
+    username=request.cookies.get('username')
+    password=request.cookies.get('password')
+
+    good_credentials=are_credentials_good(username, password)
+    if good_credentials:
+        logged_in=True
+    else:
+        logged_in=False
+    print('logged-in=',logged_in)
 
     if logged_in:
         return redirect('/')
 
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+    username=request.form.get('username')
+    password=request.form.get('password')
 
-        good_credentials = are_credentials_good(username, password)
+    good_credentials=are_credentials_good(username, password)
+    print('good_credentials=',good_credentials)
 
-        if good_credentials:
-            # Create a response with a redirect and set cookies
-            response = make_response(redirect('/'))
-            response.set_cookie('username', username)
-            response.set_cookie('password', password)
-            return response
-        else:
+    # first time we visited, no form submission
+    if username is None:
+        return render_template('login.html', bad_credentials=False)
+
+    # they submitted a form--we're on the POST method
+    else:
+        if not good_credentials:
             return render_template('login.html', bad_credentials=True)
-
-    return render_template('login.html', bad_credentials=False)
+        else:
+            #create a cookie that contains the username/password info
+            # set cookie
+            response = make_response(redirect('/'))
+            response.set_cookie('username',username)
+            response.set_cookie('password',password)
+            return response
 
 
 @app.route("/logout")
 def logout():
-    session.pop('username', None)  # Remove the username from the session
-    return redirect(url_for('login'))
+    response = make_response(render_template('logout.html'))
+    response.delete_cookie('username')
+    response.delete_cookie('password')
+    return response
 
 
 @app.route('/create_account', methods=['GET', 'POST'])
@@ -118,17 +145,18 @@ def create_account():
         elif new_password != new_password2:
             return render_template('create_account.html', not_matching=True)
 
-        sql = sqlalchemy.sql.text('''
-            INSERT INTO users (username, password)
-            VALUES (:username, :password)
-        ''')
-
         try:
-            connection.execute(sql, {
+            sql=sqlalchemy.sql.text('''
+                INSERT INTO users (username, password)
+                VALUES (:username, :password)
+                ''')
+
+            cred = connection.execute(sql, {
                 'username': new_username,
                 'password': new_password
-            })
-            # Set cookies for the new user
+                }) 
+            connection.commit()
+        # Set cookies for the new user
             response = make_response(redirect('/'))
             response.set_cookie('username', new_username)
             response.set_cookie('password', new_password)
@@ -138,20 +166,53 @@ def create_account():
     return render_template('create_account.html')
 
 
-@app.route("/create_message")
+@app.route('/create_message', methods=['GET', 'POST'])
 def create_message():
-    return render_template('create_message.html')
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+
+    if not (username and password):
+        return redirect('/')
+
+    good_credentials = are_credentials_good(username, password)
+    logged_in = True if good_credentials else False
+
+    if request.method == 'GET':
+        return render_template('create_message.html', logged_in=logged_in)
+
+    message = request.form.get('message')
+
+    if not message:
+        return render_template('create_message.html', invalid_message=True, logged_in=logged_in)
+
+    try:
+        user_query = text('''
+            SELECT id_users FROM users
+            WHERE username = :username AND password = :password
+        ''')
+        res = connection.execute(user_query, {'username': username, 'password': password})
+        user_id = res.scalar()  # Fetch the result directly
+
+        insert_query = sqlalchemy.sql.text('''
+            INSERT INTO tweets (id_users, text, created_at)
+            VALUES (:id_users, :text, :created_at)
+        ''')
+        created_at = datetime.datetime.now()
+        message_data = str(created_at).split('.')[0]  # Formatting the datetime
+        connection.execute(insert_query, {'id_users': user_id, 'text': message, 'created_at': message_data})
+        connection.commit()
+
+        return render_template('create_message.html', message_sent=True, logged_in=logged_in)
+    except sqlalchemy.exc.SQLAlchemyError as e:
+        print(e)
+        return render_template('create_message.html', error=True, logged_in=logged_in)
 
 
 @app.route("/search")
 def search():
     return render_template('search.html')
 
-
-@app.route('/home')
-def home():
-    return render_template('home.html')
-    
+   
 @app.route("/static/<path:filename>")
 def staticfiles(filename):
     return send_from_directory(app.config["STATIC_FOLDER"], filename)

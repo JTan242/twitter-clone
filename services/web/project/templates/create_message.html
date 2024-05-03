@@ -1,16 +1,26 @@
 {% extends 'base.html' %}
 
 {% block content %}
-{% if created %}
-<p>You posted a post! <a href="/home">View it here.</a></p>
+<h2>Create a new message here</h2>
+
+{% if invalid_message %}
+<p class="red">
+ERROR: Invalid message.
+</p>
+{% elif message_sent %}
+<p class="green">
+Your message was sent!
+</p>
 {% endif %}
 
-<div class = table>
-    <form action=/create_message method=POST>
-        <table>
-            <tr><td><input class="textfield" type=text name=newmessage><input type=submit value='post'></td></tr>
-        </table>
-    </form>
-    </div>
-
-{% endblock %} 
+<form action="/create_message" method="POST">
+    <table>
+        <tr>
+            <td><textarea name="message" class="message_box" rows="4" cols="50"></textarea></td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="send message" class="submit"></td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

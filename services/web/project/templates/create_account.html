@@ -5,15 +5,15 @@
 
 {% if one_blank %}
 <p class="red">
-ERROR: Invalid username, password, or age.
+Invalid username or password
 </p>
 {% elif not_matching %}
 <p class="red">
-ERROR: Your passwords do not match. Try again.
+Your passwords do not match. Try again
 </p>
 {% elif already_exists %}
 <p class="red">
-ERROR: That username already exists. Try again.
+That username already exists. Try again.
 </p>
 {% endif %}
 
