@@ -15,14 +15,14 @@ CREATE TABLE urls (
 CREATE TABLE users (
     id_users BIGSERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    age INTEGER
+    password TEXT NOT NULL
 );
 
-CREATE table tweets (
-    id_tweets BIGSERIAL primary key,
-    id_users integer not null REFERENCES users(id_users),
-    text TEXT not null,
-    created_at timestamp not null default current_timestamp,
+CREATE TABLE tweets (
+    id_tweets BIGSERIAL PRIMARY KEY,
+    id_users INTEGER NOT NULL REFERENCES users(id_users) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
     id_urls INTEGER REFERENCES urls(id_urls)
 );
+
