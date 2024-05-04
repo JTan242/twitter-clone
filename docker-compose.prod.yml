@@ -10,7 +10,7 @@ services:
       - static_volume:/home/app/web/project/static
       - media_volume:/home/app/web/project/media
     expose:
-      - 5000
+      - 2425
     env_file:
       - ./.env.prod
     depends_on:
@@ -21,10 +21,12 @@ services:
     volumes:
       - ./:/tmp/db
       - postgres_data_prod:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+      - PGUSER=postgres
     ports: 
       - 2424:5432    
-    env_file:
-      - ./.env.prod.db
 
   nginx:
     build: ./services/nginx
