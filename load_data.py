@@ -49,11 +49,19 @@ def generate_urls(num_urls):
 def generate_tweets(num_tweets):
     # Get the maximum user ID from the users table
     max_user_id = connection.execute("SELECT MAX(id_users) FROM users").scalar()
+    
+    if max_user_id is None:
+        max_user_id = 0
+    
     for i in range(num_tweets):
-        id_users = random.randint(1, max_user_id) if max_user_id else 1
+        if max_user_id > 0:
+            id_users = random.randint(1, max_user_id)
+        else:
+            id_users = 1  # Default to 1 if there are no users in the database
+        
         text = generate_random_alphanumeric(50)  # Adjust length as needed
         sql = sqlalchemy.sql.text("""
-        INSERT INTO tweets (id_users, text) VALUES (:id_users, :text);
+            INSERT INTO tweets (id_users, text) VALUES (:id_users, :text);
         """)
         res = connection.execute(sql, {
             'id_users': id_users,
