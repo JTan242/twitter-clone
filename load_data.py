@@ -70,9 +70,9 @@ def generate_tweets(num_tweets):
         print("Tweet", i)
 
 # Call functions to generate data
-generate_users(100)
-generate_urls(100)
-generate_tweets(100)
+generate_users(50)
+generate_urls(50)
+generate_tweets(50)
 
 # Close the connection
 connection.close() 
