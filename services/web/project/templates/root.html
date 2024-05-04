@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Home</h2>
 
-<h3>Recent Tweets</h3>
+<h2>Recent Tweets</h2>
 <div class="tweet-list">
     {% for tweet in tweet_list %}
     <div class="tweet">
         <div class="user-info">
             <span class="user-name">{{ tweet.username }}</span>
+            <span class="url">{{ tweet.url }}</span>
         </div>
         <div class="tweet-content">
             <p class="tweet-text">{{ tweet.text }}</p>

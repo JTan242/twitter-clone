@@ -13,7 +13,7 @@
     font-weight: bold;
 }
 
-.screen-name {
+.url {
     color: #888;
     margin-left: 10px;
 }
@@ -31,3 +31,6 @@
     font-size: 0.8em;
 }
 
+.highlight {
+    background-color: yellow;
+}

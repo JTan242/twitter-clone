@@ -1,36 +1,51 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2>Search</h2>
-    <form action="/search" method="GET">
-        <input type="text" name="query">
-        <input type="submit" value="Search" class="submit">
+    <h2>Search Results</h2>
+    <form action="/search" method="POST">
+        <input type="text" name="query" placeholder="Enter your search query">
+        <button type="submit">Search</button>
     </form>
 
-    {% for message in messages %}
-        <div class="container">
-            <div class="tweet">
-                <div class="user-info">
-                    <span class="user-name">{{ message['username'] }}</span>
+    {% if query %}
+        <!-- Display search results -->
+        <div class="tweet-list">
+            {% for message in messages %}
+                <div class="tweet">
+                    <div class="user-info">
+                        <span class="user-name">{{ message['username'] }}</span>
+                    </div>
+                    <div class="tweet-content">
+                        <p class="tweet-text">
+                            {% for part in message['text'] %}
+                                {% if part.highlighted %}
+                                    <!-- Highlight query in yellow -->
+                                    <span class="highlight">{{ part.text|safe }}</span>
+                                {% else %}
+                                    {{ part.text }}
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                        <p class="created-at">Created at: {{ message['created_at'] }}</p>
+                    </div>
                 </div>
-                <div class="tweet-content">
-                    <p class="tweet-text">{{ message['text'] }}</p>
-                    <p class="created-at">Created at: {{ message['created_at'] }}</p>
-                </div>
-            </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-
-    <div>
-        {% if page_num > 1 %}
-            <a href="?page={{ page_num - 1 }}" class="submit">Previous</a>
-        {% endif %}
-        
-        Page {{ page_num }}
-        
-        {% if messages|length == 20 %}
-            <a href="?page={{ page_num + 1 }}" class="submit">Next</a>
-        {% endif %}
-    </div>
+    {% else %}
+        <!-- Display default tweets -->
+        <div class="tweet-list">
+            {% for tweet in messages %}
+                <div class="tweet">
+                    <div class="user-info">
+                        <span class="user-name">{{ tweet.username }}</span>
+                    </div>
+                    <div class="tweet-content">
+                        <p class="tweet-text">{{ tweet.text }}</p>
+                        <p class="created-at">Created at: {{ tweet.created_at }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
 

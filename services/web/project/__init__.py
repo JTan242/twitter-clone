@@ -20,6 +20,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 import bleach   
+import re
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
@@ -51,7 +52,7 @@ def are_credentials_good(username, password):
 
 
 def get_tweets(x):
-    tweet_list=[]
+    tweet_list = []
     query_text = sqlalchemy.sql.text(
         "SELECT users.username, tweets.text, tweets.created_at "
         "FROM tweets "
@@ -64,33 +65,28 @@ def get_tweets(x):
         tweet_list.append({
             'username': row[0],
             'text': row[1],
-            'created_at': row[2]
+            'created_at': row[2],
+              
         })
     return tweet_list
 
 
 def search_helper(query, page_num):
     messages = []
-
-    # Calculate the offset for pagination
     offset = (page_num - 1) * 20
 
     sql = sqlalchemy.sql.text("""
-        SELECT id_tweets, ts_headline(message, to_tsquery(:query),
-            'StartSel="<span class=query><b>",
-            StopSel="</b></span>"') AS highlighted_message,
-            created_at, id_users
+        SELECT id_tweets, text, created_at, id_users
         FROM tweets
-        WHERE to_tsvector(message) @@ to_tsquery(:query)
-        ORDER BY to_tsvector(message) <=> to_tsquery(:query),
-            created_at DESC
+        WHERE to_tsvector(text) @@ to_tsquery(:query)
+        ORDER BY ts_rank(to_tsvector(text), to_tsquery(:query)) DESC,
+        created_at DESC
         LIMIT 20 OFFSET :offset;
     """)
 
     res = connection.execute(sql, {'query': ' & '.join(query.split()), 'offset': offset})
 
     for row in res.fetchall():
-        # Fetch user information
         user_sql = sqlalchemy.sql.text("""
             SELECT username
             FROM users
@@ -99,18 +95,34 @@ def search_helper(query, page_num):
         user_res = connection.execute(user_sql, {'id_users': row[3]})
         user_row = user_res.fetchone()
 
-        # Clean and linkify message content
-        cleaned_message = bleach.clean(row[1], tags=['b', 'span'], attributes={'span': ['class']})
-        linked_message = bleach.linkify(cleaned_message)
+        # Highlight the message
+        highlighted_text = highlight_query(row[1], query)
 
-        # Build the message dictionary
         messages.append({
             'username': user_row[0],
-            'text': linked_message,
+            'text': highlighted_text,
             'created_at': row[2]
         })
 
     return messages
+
+
+def highlight_query(text, query):
+    # Create a regular expression pattern for the query
+    pattern = re.compile(rf'({re.escape(query)})', re.IGNORECASE)
+
+    # Split the text into parts based on the query matches
+    parts = pattern.split(text)
+
+    # Create a list to store the parts along with their highlight status
+    text_parts = [{'text': part, 'highlighted': False} for part in parts]
+
+    # Iterate over the text parts and mark the ones that match the query as highlighted
+    for part in text_parts:
+        if pattern.search(part['text']):
+            part['highlighted'] = True
+
+    return text_parts
 
 
 @app.route("/")
@@ -189,17 +201,18 @@ def create_account():
             return render_template('create_account.html', not_matching=True)
 
         try:
-            sql=sqlalchemy.sql.text('''
-                INSERT INTO users (username, password)
-                VALUES (:username, :password)
-                ''')
+            with connection.begin() as trans:
+                sql = sqlalchemy.sql.text('''
+                    INSERT INTO users (username, password)
+                    VALUES (:username, :password)
+                    ''')
 
-            cred = connection.execute(sql, {
-                'username': new_username,
-                'password': new_password
-                }) 
-            connection.commit()
-        # Set cookies for the new user
+                cred = connection.execute(sql, {
+                    'username': new_username,
+                    'password': new_password
+                })
+
+            # Set cookies for the new user
             response = make_response(redirect('/'))
             response.set_cookie('username', new_username)
             response.set_cookie('password', new_password)
@@ -229,57 +242,51 @@ def create_message():
         return render_template('create_message.html', invalid_message=True, logged_in=logged_in)
 
     try:
-        user_query = text('''
-            SELECT id_users FROM users
-            WHERE username = :username AND password = :password
-        ''')
-        res = connection.execute(user_query, {'username': username, 'password': password})
-        user_id = res.scalar()  # Fetch the result directly
+        with connection.begin() as trans:
+            user_query = sqlalchemy.sql.text('''
+                SELECT id_users FROM users
+                WHERE username = :username AND password = :password
+            ''')
+            res = connection.execute(user_query, {'username': username, 'password': password})
+            user_id = res.scalar()  # Fetch the result directly
 
-        insert_query = sqlalchemy.sql.text('''
-            INSERT INTO tweets (id_users, text, created_at)
-            VALUES (:id_users, :text, :created_at)
-        ''')
-        created_at = datetime.datetime.now()
-        message_data = str(created_at).split('.')[0]  # Formatting the datetime
-        connection.execute(insert_query, {'id_users': user_id, 'text': message, 'created_at': message_data})
-        connection.commit()
-
-        return render_template('create_message.html', message_sent=True, logged_in=logged_in)
+            insert_query = sqlalchemy.sql.text('''
+                INSERT INTO tweets (id_users, text, created_at)
+                VALUES (:id_users, :text, :created_at)
+            ''')
+            created_at = datetime.datetime.now()
+            message_data = str(created_at).split('.')[0]  # Formatting the datetime
+            connection.execute(insert_query, {'id_users': user_id, 'text': message, 'created_at': message_data})
     except sqlalchemy.exc.SQLAlchemyError as e:
         print(e)
         return render_template('create_message.html', error=True, logged_in=logged_in)
-
-
-@app.route("/search")
-def search():
-    username=request.cookies.get('username')
-    password=request.cookies.get('password')
-    good_credentials=are_credentials_good(username, password)
-    if good_credentials:
-        logged_in=True
     else:
-        logged_in=False
-    print('logged-in=',logged_in)
+        return render_template('create_message.html', message_sent=True, logged_in=logged_in)
+
+
+@app.route("/search", methods=['GET', 'POST'])
+def search():
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    good_credentials = are_credentials_good(username, password)
+
+    if good_credentials:
+        logged_in = True
+    else:
+        logged_in = False
+    print('logged-in=', logged_in)
 
     page_num = int(request.args.get('page', 1))
 
-    if request.form.get('query'):
-        query=request.form.get('query')
-    elif request.cookies.get('query'):
-        query=request.cookies.get('query')
-    else:
-        query = None
+    query = request.form.get('query')
 
     if query:
-        messages=search_helper(query, page_num)
+        messages = search_helper(query, page_num)
     else:
-        messages=get_tweets(page_num)
+        messages = get_tweets(page_num)
 
-    response = make_response(render_template('search.html', messages=messages, logged_in=logged_in, username=username, page_num=page_num))
-
-    if query:
-        response.set_cookie('query',query)
+    response = make_response(render_template('search.html', messages=messages, logged_in=logged_in,
+                                             username=username, page_num=page_num, query=query))
 
     return response
 
