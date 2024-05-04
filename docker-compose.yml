@@ -16,7 +16,7 @@ services:
     build: services/postgres
     volumes:
       - ./:/tmp/db
-      - postgres_data:/var/lib/postgresql/data/
+      - postgres:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=pass
@@ -25,4 +25,4 @@ services:
       - 2424:5432
 
 volumes:
-  postgres_data:
+  postgres:
