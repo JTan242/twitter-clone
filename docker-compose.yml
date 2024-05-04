@@ -25,4 +25,4 @@ services:
       - 2424:5432
 
 volumes:
-  postgres:
+  postgres_data:
