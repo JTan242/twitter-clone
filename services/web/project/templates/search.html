@@ -47,5 +47,16 @@
             {% endfor %}
         </div>
     {% endif %}
+    <div>
+    {% if page_num > 1 %}
+        <a href="?page={{ page_num - 1 }}" class="submit">Previous</a>
+    {% endif %}
+
+    Page {{ page_num }}
+
+    {% if messages|length == 20 %}
+        <a href="?page={{ page_num + 1 }}" class="submit">Next</a>
+    {% endif %}
+</div>
 {% endblock %}
 

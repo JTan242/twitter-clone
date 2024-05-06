@@ -19,7 +19,7 @@ import psycopg2
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
-import bleach   
+import bleach
 import re
 
 app = Flask(__name__)
@@ -28,7 +28,7 @@ db = SQLAlchemy(app)
 
 
 db_url = "postgresql://postgres:pass@postgres:5432"
-engine = sqlalchemy.create_engine(db_url, connect_args={'application_name': '__init__.py root()',})
+engine = sqlalchemy.create_engine(db_url, connect_args={'application_name': '__init__.py root()', })
 connection = engine.connect()
 
 
@@ -66,7 +66,6 @@ def get_tweets(x):
             'username': row[0],
             'text': row[1],
             'created_at': row[2],
-              
         })
     return tweet_list
 
@@ -107,7 +106,7 @@ def search_helper(query, page_num):
     return messages
 
 
-def highlight_query(text, query):
+def highlight_query(text, query):  # noqa: F811
     # Create a regular expression pattern for the query
     pattern = re.compile(rf'({re.escape(query)})', re.IGNORECASE)
 
@@ -127,56 +126,54 @@ def highlight_query(text, query):
 
 @app.route("/")
 def root():
-    username=request.cookies.get('username')
-    password=request.cookies.get('password')
-    good_credentials=are_credentials_good(username, password)
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    good_credentials = are_credentials_good(username, password)
     if good_credentials:
-        logged_in=True
+        logged_in = True
     else:
-        logged_in=False
+        logged_in = False
 
     page_num = int(request.args.get('page', 1))
     tweet_list = get_tweets(page_num)
 
-    return render_template('root.html', logged_in=logged_in, page_num=page_num, username=username,tweet_list=tweet_list)
+    return render_template('root.html', logged_in=logged_in, page_num=page_num, username=username, tweet_list=tweet_list)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
-    username=request.cookies.get('username')
-    password=request.cookies.get('password')
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
 
-    good_credentials=are_credentials_good(username, password)
+    good_credentials = are_credentials_good(username, password)
     if good_credentials:
-        logged_in=True
+        logged_in = True
     else:
-        logged_in=False
-    print('logged-in=',logged_in)
+        logged_in = False
+    print('logged-in=', logged_in)
 
     if logged_in:
         return redirect('/')
 
-    username=request.form.get('username')
-    password=request.form.get('password')
+    username = request.form.get('username')
+    password = request.form.get('password')
 
-    good_credentials=are_credentials_good(username, password)
-    print('good_credentials=',good_credentials)
+    good_credentials = are_credentials_good(username, password)
+    print('good_credentials=', good_credentials)
 
-    # first time we visited, no form submission
+    # No form submission
     if username is None:
         return render_template('login.html', bad_credentials=False)
 
-    # they submitted a form--we're on the POST method
     else:
         if not good_credentials:
             return render_template('login.html', bad_credentials=True)
         else:
-            #create a cookie that contains the username/password info
-            # set cookie
+            # Create a cookie that contains the username/password info
             response = make_response(redirect('/'))
-            response.set_cookie('username',username)
-            response.set_cookie('password',password)
+            response.set_cookie('username', username)
+            response.set_cookie('password', password)
             return response
 
 
@@ -201,13 +198,13 @@ def create_account():
             return render_template('create_account.html', not_matching=True)
 
         try:
-            with connection.begin() as trans:
+            with connection.begin():
                 sql = sqlalchemy.sql.text('''
                     INSERT INTO users (username, password)
                     VALUES (:username, :password)
                     ''')
 
-                cred = connection.execute(sql, {
+                connection.execute(sql, {
                     'username': new_username,
                     'password': new_password
                 })
@@ -242,13 +239,13 @@ def create_message():
         return render_template('create_message.html', invalid_message=True, logged_in=logged_in)
 
     try:
-        with connection.begin() as trans:
+        with connection.begin():
             user_query = sqlalchemy.sql.text('''
                 SELECT id_users FROM users
                 WHERE username = :username AND password = :password
             ''')
             res = connection.execute(user_query, {'username': username, 'password': password})
-            user_id = res.scalar()  # Fetch the result directly
+            user_id = res.scalar()
 
             insert_query = sqlalchemy.sql.text('''
                 INSERT INTO tweets (id_users, text, created_at)
@@ -285,12 +282,11 @@ def search():
     else:
         messages = get_tweets(page_num)
 
-    response = make_response(render_template('search.html', messages=messages, logged_in=logged_in,
-                                             username=username, page_num=page_num, query=query))
+    response = make_response(render_template('search.html', messages=messages, logged_in=logged_in, username=username, page_num=page_num, query=query))
 
     return response
 
-   
+
 @app.route("/static/<path:filename>")
 def staticfiles(filename):
     return send_from_directory(app.config["STATIC_FOLDER"], filename)
@@ -314,6 +310,7 @@ def upload_file():
       <p><input type=file name=file><input type=submit value=Upload>
     </form>
     """
+
 
 if __name__ == "__main__":
     app.run(debug=True)
