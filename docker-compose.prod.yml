@@ -20,7 +20,7 @@ services:
     build: services/postgres
     volumes:
       - ./:/tmp/db
-      - postgres_data_prod:/var/lib/postgresql/data/
+      - postgres_prod:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=pass
@@ -39,6 +39,6 @@ services:
       - web
 
 volumes:
-  postgres_data_prod:
+  postgres_prod:
   static_volume:
   media_volume:

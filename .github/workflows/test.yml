@@ -22,6 +22,6 @@ jobs:
         docker ps -a
         sleep 20
         # load test data
-        sh ./load_tweets.sh
+        sh ./load_tweets_small.sh
         docker-compose exec -T postgres psql
 

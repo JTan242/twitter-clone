@@ -1,3 +1,6 @@
+# Final Project
+[![](https://github.com/jtan242/final-project/workflows/tests/badge.svg)](https://github.com/jtan242/final-project/actions?query=workflow%3Atests)
+
 # Dockerizing Flask with Postgres, Gunicorn, and Nginx
 
 ## Want to learn how to build this?
