@@ -19,6 +19,6 @@ jobs:
         docker-compose -f docker-compose.prod.yml up -d --build
         docker ps -a
         sleep 20
-        ./load_tweets.sh
+        sh ./load_tweets.sh
         docker-compose exec -T db ./run_tests.sh
 
