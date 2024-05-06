@@ -17,7 +17,6 @@ services:
     volumes:
       - ./:/tmp/db
       - postgres:/var/lib/postgresql/data
-      - ./path/to/schema.sql:/docker-entrypoint-initdb.d/schema.sql  # Mount the schema file
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=pass
