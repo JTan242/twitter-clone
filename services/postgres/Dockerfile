@@ -25,4 +25,4 @@ RUN mkdir /data && chown postgres /data
 
 # Copy over the pagila database;
 # we rename the files so that they get executed in the correct order
-#COPY schema.sql /docker-entrypoint-initdb.d/01.sql
+COPY ./services/postgres/schema.sql /docker-entrypoint-initdb.d/01.sql
