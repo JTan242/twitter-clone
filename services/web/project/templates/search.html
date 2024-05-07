@@ -16,22 +16,17 @@
                         <span class="user-name">{{ message['username'] }}</span>
                     </div>
                     <div class="tweet-content">
-                        <p class="tweet-text">
-                            {% for part in message['text'] %}
-                                {% if part.highlighted %}
-                                    <!-- Highlight query in yellow -->
-                                    <span class="highlight">{{ part.text|safe }}</span>
-                                {% else %}
-                                    {{ part.text }}
-                                {% endif %}
-                            {% endfor %}
-                        </p>
+                        <span class="tweet-text">{{ message.text | safe }}</span>
                         <p class="created-at">Created at: {{ message['created_at'] }}</p>
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
+
+
+
+
         <!-- Display default tweets -->
         <div class="tweet-list">
             {% for tweet in messages %}

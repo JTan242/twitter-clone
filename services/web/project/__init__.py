@@ -73,18 +73,18 @@ def get_tweets(x):
 def search_helper(query, page_num):
     messages = []
     offset = (page_num - 1) * 20
-
     sql = sqlalchemy.sql.text("""
-        SELECT id_tweets, text, created_at, id_users
-        FROM tweets
-        WHERE to_tsvector(text) @@ to_tsquery(:query)
-        ORDER BY ts_rank(to_tsvector(text), to_tsquery(:query)) DESC,
-        created_at DESC
-        LIMIT 20 OFFSET :offset;
-    """)
+    SELECT id_tweets,
+    ts_headline('english', text, plainto_tsquery(:query), 'StartSel=<span> StopSel=</span>') AS highlighted_text,
+    created_at,
+    id_users
+    FROM tweets
+    WHERE to_tsvector('english', text) @@ plainto_tsquery(:query)
+    ORDER BY created_at DESC
+    LIMIT 20 OFFSET :offset;
+""")
 
     res = connection.execute(sql, {'query': ' & '.join(query.split()), 'offset': offset})
-
     for row in res.fetchall():
         user_sql = sqlalchemy.sql.text("""
             SELECT username
@@ -93,35 +93,13 @@ def search_helper(query, page_num):
         """)
         user_res = connection.execute(user_sql, {'id_users': row[3]})
         user_row = user_res.fetchone()
-
-        # Highlight the message
-        highlighted_text = highlight_query(row[1], query)
-
         messages.append({
             'username': user_row[0],
-            'text': highlighted_text,
+            'text': bleach.clean(row[1], tags=['p', 'br', 'a', 'b', 'span'], attributes={'a': ['href']}).replace("<span>", "<span class=highlight>"),
             'created_at': row[2]
         })
 
     return messages
-
-
-def highlight_query(text, query):  # noqa: F811
-    # Create a regular expression pattern for the query
-    pattern = re.compile(rf'({re.escape(query)})', re.IGNORECASE)
-
-    # Split the text into parts based on the query matches
-    parts = pattern.split(text)
-
-    # Create a list to store the parts along with their highlight status
-    text_parts = [{'text': part, 'highlighted': False} for part in parts]
-
-    # Iterate over the text parts and mark the ones that match the query as highlighted
-    for part in text_parts:
-        if pattern.search(part['text']):
-            part['highlighted'] = True
-
-    return text_parts
 
 
 @app.route("/")
