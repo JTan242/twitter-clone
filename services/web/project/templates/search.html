@@ -2,7 +2,7 @@
 
 {% block content %}
     <h2>Search Results</h2>
-    <form action="/search" method="POST">
+    <form action="/search" method="GET">
         <input type="text" name="query" placeholder="Enter your search query">
         <button type="submit">Search</button>
     </form>
@@ -44,13 +44,13 @@
     {% endif %}
     <div>
     {% if page_num > 1 %}
-        <a href="?page={{ page_num - 1 }}" class="submit">Previous</a>
+        <a href="?query={{ query|urlencode }}&page={{ page_num - 1 }}">Previous</a>   
     {% endif %}
 
     Page {{ page_num }}
 
     {% if messages|length == 20 %}
-        <a href="?page={{ page_num + 1 }}" class="submit">Next</a>
+        <a href="?query={{ query|urlencode }}&page={{ page_num + 1 }}">Next</a>
     {% endif %}
 </div>
 {% endblock %}

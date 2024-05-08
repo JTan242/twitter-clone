@@ -2,6 +2,13 @@ import argparse
 import sqlalchemy
 import random
 import string
+import nltk
+from nltk.corpus import words
+from datetime import datetime, timedelta
+from sqlalchemy.sql import text
+
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--db', default="postgresql://postgres:pass@postgres:5432")
@@ -12,8 +19,11 @@ engine = sqlalchemy.create_engine(args.db, connect_args={
 })
 connection = engine.connect()
 
+
 # Define characters for alphanumeric string generation
 alphanumeric_chars = string.ascii_letters + string.digits
+nltk.download('words')
+english_words = words.words()
 
 # Function to generate random alphanumeric strings
 def generate_random_alphanumeric(length):
@@ -49,17 +59,17 @@ def generate_urls(num_urls):
 def generate_tweets(num_tweets):
     # Get the maximum user ID from the users table
     max_user_id = connection.execute("SELECT MAX(id_users) FROM users").scalar()
-    
+
     if max_user_id is None:
         max_user_id = 0
-    
+
     for i in range(num_tweets):
         if max_user_id > 0:
             id_users = random.randint(1, max_user_id)
         else:
             id_users = 1  # Default to 1 if there are no users in the database
-        
-        text = generate_random_alphanumeric(50)  # Adjust length as needed
+        text = ' '.join([random.choice(english_words) for _ in range(random.randint(4, 8))])
+        # text = generate_random_alphanumeric(50)  # Adjust length as needed
         sql = sqlalchemy.sql.text("""
             INSERT INTO tweets (id_users, text) VALUES (:id_users, :text);
         """)
@@ -75,5 +85,4 @@ generate_urls(1000000)
 generate_tweets(1000000)
 
 # Close the connection
-connection.close() 
-
+connection.close()

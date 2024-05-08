@@ -239,7 +239,7 @@ def create_message():
         return render_template('create_message.html', message_sent=True, logged_in=logged_in)
 
 
-@app.route("/search", methods=['GET', 'POST'])
+@app.route("/search", methods=['GET'])
 def search():
     username = request.cookies.get('username')
     password = request.cookies.get('password')
@@ -252,8 +252,7 @@ def search():
     print('logged-in=', logged_in)
 
     page_num = int(request.args.get('page', 1))
-
-    query = request.form.get('query')
+    query = request.args.get('query', '')
 
     if query:
         messages = search_helper(query, page_num)
