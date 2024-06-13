@@ -29,6 +29,7 @@ The database consists of 3 tables within Postgres: users, tweets, and url
 - text
 - created_at
 - id_url
+  
 Within these tables, a scipt is employed to input random strings into each of the tables
 
 ## Functionality 
