@@ -34,13 +34,21 @@ connection = engine.connect()
 
 def are_credentials_good(username, password):
     sql = sqlalchemy.sql.text('''
-        SELECT password FROM users WHERE username = :username
-    ''')
-    cred = connection.execute(sql, {'username': username}).fetchone()
+        SELECT username FROM users
+        WHERE username = :username
+        AND password = :password
+        ;
+        ''')
 
-    if cred and check_password_hash(cred[0], password):
+    cred = connection.execute(sql, {
+        'username': username,
+        'password': password
+    })
+
+    if cred.fetchone() is None:
+        return False
+    else:
         return True
-    return False
 
 
 def get_tweets(x):
