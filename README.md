@@ -1,5 +1,4 @@
 # Final Project
-[![Tests](https://github.com/jtan242/final-project/workflows/tests/badge.svg)](https://github.com/jtan242/final-project/actions?query=workflow%3Atests)
 
 ## Overview 
 This project is inspired by the architecture of Instagram to create a Twitter-like, database-backed webpage from scratch.
